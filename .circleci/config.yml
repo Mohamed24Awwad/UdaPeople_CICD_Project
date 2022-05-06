@@ -1,8 +1,28 @@
 version: 2.1
 
-# orbs:
-#   slack: circleci/slack@4.1.1
+orbs:
+  slack: circleci/slack@4.1.1
 
+  slack-notification-fail:
+    description: Send notification to Slack
+    steps:
+      - extract-commit-message
+
+      - slack/notify:
+          channel: C01FC0ZPENR
+          event: fail
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                      "type": "mrkdwn",
+                      "text": "Your job *$CIRCLE_JOB* has *faild* :octagonal_sign: (<$CIRCLE_BUILD_URL|build #$CIRCLE_BUILD_NUM>)\n\nrepo: $CIRCLE_REPOSITORY_URL\n\nbranch: $CIRCLE_BRANCH\n\ncommitter: $CIRCLE_USERNAME\n\ncommit message: $COMMIT_MESSAGE"
+                  }
+                }
+              ]
+            }
 
 jobs:
   build-frontend:
@@ -27,7 +47,7 @@ jobs:
           paths:
             - ~/project/frontend/node_modules
 
-      # - slack-notification-fail
+    
 
   build-backend:
     docker:
@@ -53,7 +73,7 @@ jobs:
           paths:
             - ~/project/backend/node_modules
 
-      # - slack-notification-fail
+       
 
 workflows:
   default:
