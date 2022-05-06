@@ -3,7 +3,9 @@ version: 2.1
 orbs:
   slack: circleci/slack@4.1.1
 
-
+# ---------------------------------------------------------------------------- #
+#                                 Jobs Section                                 #
+# ---------------------------------------------------------------------------- #
 jobs:
   build-frontend:
     docker:
@@ -53,7 +55,36 @@ jobs:
           paths:
             - ~/project/backend/node_modules
 
-       
+
+
+  test-frontend:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys: [frontend-build]
+      - run:
+          name: frontend tests
+          command: |
+            cd frontend
+            npm i
+            npm run test   
+
+  test-backend:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys: [backend-build]
+      - run:
+          name: backend tests
+          command: |
+            cd backend
+            npm run test
+
+
 
 workflows:
   default:
