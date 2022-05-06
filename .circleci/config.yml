@@ -55,4 +55,11 @@ jobs:
 
       # - slack-notification-fail
 
-  
+workflows:
+  default:
+     jobs:
+      - build-frontend:
+          context: slack
+      - build-backend:
+          context: slack
+          
