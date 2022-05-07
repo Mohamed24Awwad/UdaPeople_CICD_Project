@@ -69,6 +69,7 @@ jobs:
           command: |
             cd frontend
             npm i
+            npm audit --audit-level=critical
             npm run test   
 
   test-backend:
@@ -82,6 +83,7 @@ jobs:
           name: backend tests
           command: |
             cd backend
+            npm audit --audit-level=critical
             npm run test
 
   scan-frontend:
