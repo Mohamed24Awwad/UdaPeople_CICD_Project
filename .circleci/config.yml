@@ -11,7 +11,7 @@ orbs:
       - extract-commit-message
 
       - slack/notify:
-          channel: general
+          channel: C033R6TGLDV   // Slack channel to send notifications.
           event: fail
           custom: |
             {
@@ -31,7 +31,7 @@ orbs:
       - extract-commit-message
 
       - slack/notify:
-          channel: general
+          channel: C033R6TGLDV
           event: pass
           custom: |
             {
