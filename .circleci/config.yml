@@ -85,6 +85,8 @@ jobs:
             npm install
             npm audit fix --audit-level=critical --force
             npm audit --audit-level=critical
+            npm audit --audit-level=high
+            npm audit fix 
             npm run test --prefix backend
 
   scan-frontend:
