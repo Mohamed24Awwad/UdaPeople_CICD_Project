@@ -82,10 +82,8 @@ jobs:
           name: backend test
           command: |
             cd backend
-            npm i
-            npm audit fix --audit-level=critical --force
-            npm audit fix 
-            npm run test --prefix backend
+            npm install
+            npm test
 
   scan-frontend:
     docker:
