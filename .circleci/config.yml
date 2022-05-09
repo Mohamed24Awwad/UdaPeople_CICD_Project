@@ -42,7 +42,7 @@ jobs:
           key: v1-frontend-build
           paths:
             - ~/project/frontend/node_modules
-      
+      - notify_on_failure 
 
   build-backend:
     docker:
