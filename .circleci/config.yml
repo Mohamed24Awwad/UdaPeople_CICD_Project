@@ -5,7 +5,9 @@ orbs:
   slack: circleci/slack@4.9.4
 
 commands:
-# ---------------------------- Slack Notification ---------------------------- #
+# ---------------------------------------------------------------------------- #
+#                              Slack Notification                              #
+# ---------------------------------------------------------------------------- #
   # notify_on_failure:
   #   steps:
   #     - slack/notify:
@@ -73,7 +75,9 @@ commands:
               npm install
               npm run migration:revert
             fi
-            
+           # ---------------------------------------------------------------------------- #
+           #                                Intialized Jobs                               #
+           # ---------------------------------------------------------------------------- #
 jobs:
   build-frontend:
     docker:
@@ -226,21 +230,23 @@ jobs:
       - install_awscli
       - install_ansible
       - add_ssh_keys:
-          fingerprints: ["9f:ea:e5:d8:42:70:93:8c:65:18:b2:5f:d1:04:92:00"]
+          fingerprints:
+            - "9f:ea:e5:d8:42:70:93:8c:65:18:b2:5f:d1:04:92:00" # CircleCI SSH key
       - attach_workspace:
           at: ~/
       - run:
           name: Configure server
           command: |
-            cd ~/project/.circleci/ansible
-            ansible-playbook configure-server.yml --inventory-file=inventory.txt
-            ansible-playbook configure-prometheus.yml --inventory-file=inventory.txt
+            cd .circleci/ansible
+            cat inventory.txt
+            ansible-playbook -i inventory.txt configure-server.yml
+      - destroy-environment
             
       - destroy-environment
 
   run-migrations:
     docker:
-      - image: cimg/node:13.8.0
+      - image: cimg/node:13.8.0 
     steps:
       - checkout
       - install_awscli
@@ -307,7 +313,8 @@ jobs:
       - install_ansible
       - install_nodejs
       - add_ssh_keys:
-          fingerprints: ["9f:ea:e5:d8:42:70:93:8c:65:18:b2:5f:d1:04:92:00"]
+          fingerprints: 
+             - "9f:ea:e5:d8:42:70:93:8c:65:18:b2:5f:d1:04:92:00" # CircleCI SSH key
       - attach_workspace:
           at: ~/
       - restore_cache:
