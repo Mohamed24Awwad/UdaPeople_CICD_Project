@@ -162,7 +162,7 @@ jobs:
             aws cloudformation deploy \
               --template-file .circleci/files/backend.yml \
               --tags project=udapeople \
-              --stack-name "backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --stack-name "backend-infrastructure-${CIRCLE_WORKFLOW_ID:0:7}" \
               --parameter-overrides ID=${CIRCLE_WORKFLOW_ID:0:7}
       - run:
           name: Add backend ip to ansible inventory
@@ -173,11 +173,7 @@ jobs:
               --output text | tr -d '\n'`
             echo $BACKEND_IP >> .circleci/ansible/inventory.txt
             cat .circleci/ansible/inventory.txt
-            # put it in the shared memory
-            curl -H "Content-Type: text/plain" \
-              -H "token: e38aee29-a976-4696-843d-2d115c52219a" \
-              --request PUT \
-              --data "$BACKEND_IP" https://api.memstash.io/values/BACKEND_IP_${CIRCLE_WORKFLOW_ID:0:7}
+           
       - persist_to_workspace:
           root: ~/
           paths:
@@ -190,7 +186,7 @@ jobs:
             aws cloudformation deploy \
             --template-file .circleci/files/frontend.yml \
             --tags project=udapeople \
-            --stack-name "frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
+            --stack-name "frontend-infrastructure-${CIRCLE_WORKFLOW_ID:0:7}" \
             --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
       
       # - slack-notification-fail
