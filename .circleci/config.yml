@@ -5,6 +5,7 @@ orbs:
   slack: circleci/slack@4.9.4
 
 commands:
+# ---------------------------- Slack Notification ---------------------------- #
   # notify_on_failure:
   #   steps:
   #     - slack/notify:
@@ -214,6 +215,8 @@ jobs:
             - project/.circleci/ansible/inventory.txt
       - destroy-environment
 
+
+
   configure-infrastructure:
     docker:
       - image: cimg/base:2022.04
@@ -222,17 +225,34 @@ jobs:
       - install_awscli
       - install_ansible
       - add_ssh_keys:
-          fingerprints: ["9f:ea:e5:d8:42:70:93:8c:65:18:b2:5f:d1:04:92:00"]
+          fingerprints:
+            - "9f:ea:e5:d8:42:70:93:8c:65:18:b2:5f:d1:04:92:00"
+
+      - run:
+          name: Install dependencies
+          command: |
+            apt -y update
+            apt -y install jq tar gzip git curl
       - attach_workspace:
           at: ~/
+
+      - run:
+          name: Avoid hosts unknown
+          command: |
+            echo -e "Host *\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
       - run:
           name: Configure server
           command: |
-            cd .circleci/ansible
-            cat inventory.txt
-            ansible-playbook -i inventory.txt configure-server.yml
+            cd ~/project/.circleci/ansible
+            ansible-playbook configure-server.yml --inventory-file=inventory.txt
+            
+      - run:
+          name: Install prometheus node exporter
+          command: |
+            cd ~/project/.circleci/ansible
+            ansible-playbook configure-prometheus.yml --inventory-file=inventory.txt
       - destroy-environment
-
+      
   run-migrations:
     docker:
       - image: cimg/node:13.8.0
