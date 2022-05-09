@@ -76,62 +76,69 @@ commands:
 jobs:
   build-frontend:
     docker:
-      - image: cimg/node:13.8.0
+      - image: circleci/node:13.8.0
     steps:
       - checkout
-      - restore_cache:
-          keys: [frontend-depnd]
       - run:
-          name: Build front-end
+          name: Install prerequsites
+          command: |            
+            sudo apt -y install jq tar gzip git curl
+      - run:
+          name: Frontend Build
           command: |
             cd frontend
-            npm install
+            npm i
             npm run build
       - save_cache:
-          paths: [frontend/node_modules]
-          key: frontend-depnd
+          key: v1-frontend-build
+          paths:
+            - ~/project/frontend/node_modules
       - notify_on_failure
 
   build-backend:
     docker:
-      - image: cimg/node:13.8.0
+      - image: circleci/node:13.8.0
     steps:
       - checkout
-      - restore_cache:
-          keys: [backend-depnd]
       - run:
-          name: Back-end build
+          name: Install prerequsites
+          command: |
+            sudo apt -y install jq tar gzip git curl
+      - run:
+          name: Backend build
           command: |
             cd backend
-            npm install
-            npm run build 
+            npm i
+            npm run build
       - save_cache:
-          paths: [backend/node_modules]
-          key: backend-depnd
+          key: v1-backend-build
+          paths:
+            - ~/project/backend/node_modules
       - notify_on_failure
 
   test-frontend:
     docker:
-      - image: cimg/node:13.8.0
+      - image: circleci/node:13.8.0
     steps:
       - checkout
       - restore_cache:
-          keys: [frontend-depnd]
+          keys: [frontend-build]
       - run:
-          name: Frontend unit test
+          name: frontend test
           command: |
             cd frontend
-            npm install
-            npm test 
+            npm i
+            npm run test 
+
   test-backend:
     docker:
-      - image: cimg/node:13.8.0
+      - image: circleci/node:13.8.0
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-depnd]
+          keys: [backend-build]
       - run:
-          name: Backend unit test
+          name: backend test
           command: |
             cd backend
             npm install
@@ -140,34 +147,30 @@ jobs:
 
   scan-frontend:
     docker:
-      - image: cimg/node:13.8.0
+      - image: circleci/node:13.8.0
     steps:
       - checkout
       - restore_cache:
-          keys: [frontend-depnd]
+          keys: [frontend-build]
       - run:
-          name: Frontend scan
+          name: frontend scan
           command: |
             cd frontend
-            npm install
-            npm audit fix --audit-level=critical --force
-            npm audit fix --audit-level=critical --force
             npm audit --audit-level=critical
       - notify_on_failure
 
   scan-backend:
     docker:
-      - image: cimg/node:13.8.0
+      - image: circleci/node:13.8.0
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-depnd]
+          keys: [backend-build]
       - run:
-          name: Backend scan
+          name: backend scan
           command: |
             cd backend
             npm install
-            npm audit fix --audit-level=critical --force
             npm audit fix --audit-level=critical --force
             npm audit --audit-level=critical
       - notify_on_failure
