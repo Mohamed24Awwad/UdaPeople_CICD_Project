@@ -7,12 +7,52 @@ orbs:
  # ---------------------------------------------------------------------------- #
 
   commands:
-   notify_on_failure:
-     steps:
-       - slack/notify:
-          event: fail
+  #  slack-notification-fail:
+  #    steps:
+  #      - slack/notify:
+  #         event: fail
+  #         channel: MohamedAwwad
+  
+   slack-notification-fail:
+    description: Send notification to Slack
+    steps:
+      - extract-commit-message
+
+      - slack/notify:
           channel: MohamedAwwad
-          template: basic_fail_1
+          event: fail
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                      "type": "mrkdwn",
+                      "text": "Your job *$CIRCLE_JOB* has *faild* :octagonal_sign: (<$CIRCLE_BUILD_URL|build #$CIRCLE_BUILD_NUM>)\n\nrepo: $CIRCLE_REPOSITORY_URL\n\nbranch: $CIRCLE_BRANCH\n\ncommitter: $CIRCLE_USERNAME\n\ncommit message: $COMMIT_MESSAGE"
+                  }
+                }
+              ]
+            }
+  slack-notification-pass:
+    description: Send notification to Slack
+    steps:
+      - extract-commit-message
+
+      - slack/notify:
+          channel: MohamedAwwad
+          event: pass
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                      "type": "mrkdwn",
+                      "text": "Your job *$CIRCLE_JOB* has *built* :white_check_mark: (<$CIRCLE_BUILD_URL|build #$CIRCLE_BUILD_NUM>)\n\nrepo: $CIRCLE_REPOSITORY_URL\n\nbranch: $CIRCLE_BRANCH\n\ncommitter: $CIRCLE_USERNAME\n\ncommit message: $COMMIT_MESSAGE"
+                  }
+                }
+              ]
+            }
 
 # ---------------------------------------------------------------------------- #
 #                                 Jobs Section                                 #
@@ -40,7 +80,7 @@ jobs:
           key: v1-frontend-build
           paths:
             - ~/project/frontend/node_modules
-      - notify_on_failure
+      - slack-notification-fail
 
   build-backend:
     docker:
@@ -65,7 +105,7 @@ jobs:
           key: v1-backend-build
           paths:
             - ~/project/backend/node_modules
-      - notify_on_failure
+      - slack-notification-fail
 
 
   test-frontend:
@@ -81,7 +121,7 @@ jobs:
             cd frontend
             npm i
             npm run test  
-      - notify_on_failure
+      - slack-notification-fail
 
   test-backend:
     docker:
@@ -96,7 +136,7 @@ jobs:
             cd backend
             npm install
             npm test
-      - notify_on_failure
+      - slack-notification-fail
 
   scan-frontend:
     docker:
@@ -110,7 +150,7 @@ jobs:
           command: |
             cd frontend
             npm audit --audit-level=critical
-      - notify_on_failure
+      - slack-notification-fail
 
   scan-backend:
     docker:
@@ -126,7 +166,7 @@ jobs:
             npm install
             npm audit fix --audit-level=critical --force
             npm audit --audit-level=critical
-      - notify_on_failure 
+      - slack-notification-fail 
 
 
 notify_on_sucess:
@@ -141,18 +181,22 @@ notify_on_sucess:
 workflows:
   default:
      jobs:
-      - build-frontend 
-          
-      - build-backend
+      - build-frontend:
+         context: slack
+      - build-backend:
+         context: slack
           
       - test-frontend:
+          context: slack
           requires: [build-frontend]
       - test-backend:
+          context: slack
           requires: [build-backend]
       - scan-backend:
+          context: slack
           requires: [build-backend]
       - scan-frontend:
+          context: slack
           requires: [build-frontend]
-      - notify_on_sucess:
-          requires: [test-frontend, test-backend, scan-backend, scan-frontend]
+      
           
