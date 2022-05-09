@@ -1,58 +1,19 @@
 version: 2.1
 
 orbs:
-  slack: circleci/slack@4.9.3
+  slack: circleci/slack@4.1.1
  # ---------------------------------------------------------------------------- #
  #                              Slack Notifications                             #
  # ---------------------------------------------------------------------------- #
 
   commands:
-  #  slack-notification-fail:
-  #    steps:
-  #      - slack/notify:
-  #         event: fail
-  #         channel: MohamedAwwad
-  
-   slack-notification-fail:
-    description: Send notification to Slack
-    steps:
-      - extract-commit-message
-
-      - slack/notify:
-          channel: MohamedAwwad
+    slack-notification-fail:
+     steps:
+       - slack/notify:
           event: fail
-          custom: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                      "type": "mrkdwn",
-                      "text": "Your job *$CIRCLE_JOB* has *faild* :octagonal_sign: (<$CIRCLE_BUILD_URL|build #$CIRCLE_BUILD_NUM>)\n\nrepo: $CIRCLE_REPOSITORY_URL\n\nbranch: $CIRCLE_BRANCH\n\ncommitter: $CIRCLE_USERNAME\n\ncommit message: $COMMIT_MESSAGE"
-                  }
-                }
-              ]
-            }
-  slack-notification-pass:
-    description: Send notification to Slack
-    steps:
-      - extract-commit-message
-
-      - slack/notify:
           channel: MohamedAwwad
-          event: pass
-          custom: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                      "type": "mrkdwn",
-                      "text": "Your job *$CIRCLE_JOB* has *built* :white_check_mark: (<$CIRCLE_BUILD_URL|build #$CIRCLE_BUILD_NUM>)\n\nrepo: $CIRCLE_REPOSITORY_URL\n\nbranch: $CIRCLE_BRANCH\n\ncommitter: $CIRCLE_USERNAME\n\ncommit message: $COMMIT_MESSAGE"
-                  }
-                }
-              ]
-            }
+  
+   
 
 # ---------------------------------------------------------------------------- #
 #                                 Jobs Section                                 #
@@ -181,22 +142,23 @@ notify_on_sucess:
 workflows:
   default:
      jobs:
-      - build-frontend:
-         context: slack
-      - build-backend:
-         context: slack
+      - build-frontend
+         
+      - build-backend
+         
           
       - test-frontend:
-          context: slack
+          
           requires: [build-frontend]
       - test-backend:
-          context: slack
+          
           requires: [build-backend]
       - scan-backend:
-          context: slack
+          
           requires: [build-backend]
       - scan-frontend:
-          context: slack
           requires: [build-frontend]
+      - notify_on_sucess:
+          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
       
           
