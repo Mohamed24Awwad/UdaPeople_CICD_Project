@@ -83,10 +83,10 @@ jobs:
             cd frontend
             npm i
             npm run test  
-      - notify_on_failure:
-          steps:
-            - slack/notify:
-              event: fail
+      # - notify_on_failure:
+      #     steps:
+      #       - slack/notify:
+      #         event: fail
 
   test-backend:
     docker:
