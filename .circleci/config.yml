@@ -195,7 +195,7 @@ jobs:
             --template-file .circleci/files/backend.yml \
             --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
             --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  \
-            --tags project=project3
+            --tags project=udapeople
       - run:
           name: creating frontend infrastructure
           command: |
@@ -203,7 +203,7 @@ jobs:
             --template-file .circleci/files/frontend.yml \
             --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
             --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  \
-            --tags project=project3
+            --tags project=udapeople
       - run:
           name: Add backend EC2 IP to ansible inventory file
           command: |
@@ -231,7 +231,7 @@ jobs:
       - install_ansible
       - add_ssh_keys:
           fingerprints:
-            - "9f:ea:e5:d8:42:70:93:8c:65:18:b2:5f:d1:04:92:00" # CircleCI SSH key
+            - "37:bf:d3:a8:d6:56:09:53:05:e3:02:e5:07:53:f3:86" # CircleCI SSH key
       - attach_workspace:
           at: ~/
       - run:
@@ -314,7 +314,7 @@ jobs:
       - install_nodejs
       - add_ssh_keys:
           fingerprints: 
-             - "9f:ea:e5:d8:42:70:93:8c:65:18:b2:5f:d1:04:92:00" # CircleCI SSH key
+             - "37:bf:d3:a8:d6:56:09:53:05:e3:02:e5:07:53:f3:86" # CircleCI SSH key
       - attach_workspace:
           at: ~/
       - restore_cache:
