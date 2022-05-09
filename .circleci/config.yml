@@ -470,7 +470,7 @@ workflows:
             - scan-frontend
             - deploy-infrastructure
             # - run-migrations
-            - deploy-frontend
-            - deploy-backend
-            # - smoke-test
-            - cloudfront-update
+            # - deploy-frontend
+            # - deploy-backend
+            # # - smoke-test
+            # - cloudfront-update
