@@ -160,6 +160,13 @@ workflows:
       - scan-frontend:
           requires: [build-frontend]
       - notify_on_sucess:
-          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+          requires:
+          - build-frontend
+          - build-backend
+          - test-frontend
+          - test-backend
+          - scan-frontend 
+          - scan-backend
+
       
           
