@@ -5,13 +5,6 @@ orbs:
   slack: circleci/slack@4.9.4
 
 commands:
-  notify_on_failure:
-    steps:
-      - slack/notify:
-          channel: D033Z58UL4E
-          event: fail
-          template: basic_fail_1
-
   install_awscli:
     description: "Installs AWS_CLI"
     steps:
@@ -93,7 +86,7 @@ jobs:
       - save_cache:
           paths: [frontend/node_modules]
           key: frontend-depnd
-      - notify_on_failure
+      
 
   build-backend:
     docker:
@@ -111,7 +104,7 @@ jobs:
       - save_cache:
           paths: [backend/node_modules]
           key: backend-depnd
-      - notify_on_failure
+      
 
   test-frontend:
     docker:
@@ -140,7 +133,7 @@ jobs:
             cd backend
             npm install
             npm test
-      - notify_on_failure
+      
 
   scan-frontend:
     docker:
@@ -157,7 +150,7 @@ jobs:
             npm audit fix --audit-level=critical --force
             npm audit fix --audit-level=critical --force
             npm audit --audit-level=critical
-      - notify_on_failure
+      
 
   scan-backend:
     docker:
@@ -174,7 +167,7 @@ jobs:
             npm audit fix --audit-level=critical --force
             npm audit fix --audit-level=critical --force
             npm audit --audit-level=critical
-      - notify_on_failure
+      
       
   deploy-infrastructure:
     docker:
@@ -460,17 +453,4 @@ workflows:
       #     requires: [smoke-test]
       # - cleanup:
       #     requires: [cloudfront-update]
-      - notify_on_success:
-          requires: 
-            - build-frontend
-            - build-backend
-            - test-frontend
-            - test-backend
-            - scan-backend
-            - scan-frontend
-            - deploy-infrastructure
-            # - run-migrations
-            # - deploy-frontend
-            # - deploy-backend
-            # # - smoke-test
-            # - cloudfront-update
+     
