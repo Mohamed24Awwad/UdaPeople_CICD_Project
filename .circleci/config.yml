@@ -459,12 +459,12 @@ workflows:
 
 
 
-      - notify_on_success:
-          requires: 
-            - build-frontend
-            - build-backend
-            - test-frontend
-            - test-backend
-            - scan-backend
-            - scan-frontend
-            - deploy-infrastructure
+      # - notify_on_success:
+      #     requires: 
+      #       - build-frontend
+      #       - build-backend
+      #       - test-frontend
+      #       - test-backend
+      #       - scan-backend
+      #       - scan-frontend
+      #       - deploy-infrastructure
