@@ -17,6 +17,7 @@ orbs:
 # ---------------------------------------------------------------------------- #
 #                                 Jobs Section                                 #
 # ---------------------------------------------------------------------------- #
+
 jobs:
   build-frontend:
     docker:
@@ -39,7 +40,6 @@ jobs:
           key: v1-frontend-build
           paths:
             - ~/project/frontend/node_modules
-
       - notify_on_failure
 
   build-backend:
@@ -65,7 +65,6 @@ jobs:
           key: v1-backend-build
           paths:
             - ~/project/backend/node_modules
-
       - notify_on_failure
 
 
@@ -82,8 +81,6 @@ jobs:
             cd frontend
             npm i
             npm run test  
-
-      
       - notify_on_failure
 
   test-backend:
@@ -99,8 +96,6 @@ jobs:
             cd backend
             npm install
             npm test
-
-
       - notify_on_failure
 
   scan-frontend:
@@ -115,7 +110,6 @@ jobs:
           command: |
             cd frontend
             npm audit --audit-level=critical
-
       - notify_on_failure
 
   scan-backend:
@@ -132,7 +126,6 @@ jobs:
             npm install
             npm audit fix --audit-level=critical --force
             npm audit --audit-level=critical
-
       - notify_on_failure 
 
 
