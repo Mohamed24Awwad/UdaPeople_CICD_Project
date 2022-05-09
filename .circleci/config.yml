@@ -23,6 +23,7 @@ commands:
             curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
             unzip awscliv2.zip
             sudo ./aws/install
+
   install_ansible:
     description: "Installs Ansible on Ubuntu images"
     steps:
@@ -33,6 +34,7 @@ commands:
             sudo apt install software-properties-common 
             sudo add-apt-repository --yes --update ppa:ansible/ansible
             sudo apt install ansible 
+            apk add --upgrade bash ansible openssh-client
   
   install_nodejs:
     description: "This command installs NodeJS on the docker image"
@@ -218,10 +220,8 @@ jobs:
           paths:
             - project/.circleci/ansible/inventory.txt
       - destroy-environment
-
-
-
-      
+ 
+            
   configure-infrastructure:
     docker:
       - image: cimg/base:2022.04
@@ -230,8 +230,7 @@ jobs:
       - install_awscli
       - install_ansible
       - add_ssh_keys:
-          fingerprints:
-            - "37:bf:d3:a8:d6:56:09:53:05:e3:02:e5:07:53:f3:86" # CircleCI SSH key
+          fingerprints: ["37:bf:d3:a8:d6:56:09:53:05:e3:02:e5:07:53:f3:86"]
       - attach_workspace:
           at: ~/
       - run:
@@ -240,8 +239,6 @@ jobs:
             cd .circleci/ansible
             cat inventory.txt
             ansible-playbook -i inventory.txt configure-server.yml
-      - destroy-environment
-            
       - destroy-environment
 
   run-migrations:
