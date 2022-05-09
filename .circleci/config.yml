@@ -120,7 +120,7 @@ jobs:
           command: |
             cd frontend
             npm audit --audit-level=critical
-      - notify_on_failure
+      # - notify_on_failure
 
   scan-backend:
     docker:
@@ -215,7 +215,27 @@ jobs:
             --stack-name "frontend-infrastructure-${CIRCLE_WORKFLOW_ID:0:7}" \
             --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
       
-      - destroy-environment   
+      - destroy-environment 
+
+
+  configure-infrastructure:
+    docker:
+      - image: cimg/base:2022.04
+    steps:
+      - checkout
+      - install_awscli
+      - install_ansible
+      - add_ssh_keys:
+          fingerprints: ["8a:d6:c1:de:00:85:c5:9b:b4:d5:90:49:0c:b8:99:6a"]
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Configure server
+          command: |
+            cd .circleci/ansible
+            cat inventory.txt
+            ansible-playbook -i inventory.txt configure-server.yml
+      - destroy-environment  
   
 
 workflows:
@@ -237,6 +257,7 @@ workflows:
             - scan-frontend
             - test-backend
             - test-frontend
-
+       - configure-infrastructure:
+           requires: [deploy-infrastructure]
       
           
