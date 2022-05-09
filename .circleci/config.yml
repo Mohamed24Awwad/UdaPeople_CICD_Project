@@ -1,17 +1,18 @@
 version: 2.1
 
 orbs:
-  slack: circleci/slack@4.1.1
+  slack: circleci/slack@4.9.3
  # ---------------------------------------------------------------------------- #
  #                              Slack Notifications                             #
  # ---------------------------------------------------------------------------- #
 
   commands:
-    slack-notification-fail:
+    notify_on_failure:
      steps:
        - slack/notify:
           event: fail
           channel: MohamedAwwad
+          template: basic_fail_1
   
    
 
@@ -41,7 +42,7 @@ jobs:
           key: v1-frontend-build
           paths:
             - ~/project/frontend/node_modules
-      - slack-notification-fail
+      - notify_on_failure
 
   build-backend:
     docker:
@@ -66,7 +67,7 @@ jobs:
           key: v1-backend-build
           paths:
             - ~/project/backend/node_modules
-      - slack-notification-fail
+      - notify_on_failure
 
 
   test-frontend:
@@ -82,7 +83,7 @@ jobs:
             cd frontend
             npm i
             npm run test  
-      - slack-notification-fail
+      - notify_on_failure
 
   test-backend:
     docker:
@@ -97,7 +98,7 @@ jobs:
             cd backend
             npm install
             npm test
-      - slack-notification-fail
+      - notify_on_failure
 
   scan-frontend:
     docker:
@@ -111,7 +112,7 @@ jobs:
           command: |
             cd frontend
             npm audit --audit-level=critical
-      - slack-notification-fail
+      - notify_on_failure
 
   scan-backend:
     docker:
@@ -127,12 +128,12 @@ jobs:
             npm install
             npm audit fix --audit-level=critical --force
             npm audit --audit-level=critical
-      - slack-notification-fail 
+      - notify_on_failure 
 
 
 notify_on_sucess:
     docker:
-      - image: cimg/bash:stable
+      - image: cimg/base:stable
     steps:
       - slack/notify:
           event: pass
