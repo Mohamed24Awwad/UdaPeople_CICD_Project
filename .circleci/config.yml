@@ -5,14 +5,12 @@ orbs:
   slack: circleci/slack@4.9.4
 
 commands:
-# ---------------------------------------------------------------------------- #
-#                              Slack Notification                              #
-# ---------------------------------------------------------------------------- #
-  # notify_on_failure:
-  #   steps:
-  #     - slack/notify:
-  #         channel: D033Z58UL4E
-  #         template: basic_fail_1
+  notify_on_failure:
+    steps:
+      - slack/notify:
+          channel: D033Z58UL4E
+          event: fail
+          template: basic_fail_1
 
   install_awscli:
     description: "Installs AWS_CLI"
@@ -31,10 +29,9 @@ commands:
           name: "Install Ansible"
           command: |
             sudo apt update
-            sudo apt install software-properties-common 
+            sudo apt install software-properties-common -y
             sudo add-apt-repository --yes --update ppa:ansible/ansible
-            sudo apt install ansible 
-            apk add --upgrade bash ansible openssh-client
+            sudo apt install ansible -y
   
   install_nodejs:
     description: "This command installs NodeJS on the docker image"
@@ -44,6 +41,7 @@ commands:
           command: |
             curl -fsSL https://deb.nodesource.com/setup_13.x | sudo -E bash -
             sudo apt install -y nodejs
+
   destroy-environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
     parameters:
@@ -77,110 +75,106 @@ commands:
               npm install
               npm run migration:revert
             fi
-           # ---------------------------------------------------------------------------- #
-           #                                Intialized Jobs                               #
-           # ---------------------------------------------------------------------------- #
+            
 jobs:
   build-frontend:
     docker:
-      - image: circleci/node:13.8.0
+      - image: cimg/node:13.8.0
     steps:
       - checkout
+      - restore_cache:
+          keys: [frontend-depnd]
       - run:
-          name: Install prerequsites
-          command: |            
-            sudo apt -y install jq tar gzip git curl
-      - run:
-          name: Frontend Build
+          name: Build front-end
           command: |
             cd frontend
-            npm i
+            npm install
             npm run build
       - save_cache:
-          key: v1-frontend-build
-          paths:
-            - ~/project/frontend/node_modules
-      # - notify_on_failure
+          paths: [frontend/node_modules]
+          key: frontend-depnd
+      - notify_on_failure
 
   build-backend:
     docker:
-      - image: circleci/node:13.8.0
+      - image: cimg/node:13.8.0
     steps:
       - checkout
+      - restore_cache:
+          keys: [backend-depnd]
       - run:
-          name: Install prerequsites
-          command: |
-            sudo apt -y install jq tar gzip git curl
-      - run:
-          name: Backend build
+          name: Back-end build
           command: |
             cd backend
-            npm i
-            npm run build
+            npm install
+            npm run build 
       - save_cache:
-          key: v1-backend-build
-          paths:
-            - ~/project/backend/node_modules
-      # - notify_on_failure
+          paths: [backend/node_modules]
+          key: backend-depnd
+      - notify_on_failure
 
   test-frontend:
     docker:
-      - image: circleci/node:13.8.0
+      - image: cimg/node:13.8.0
     steps:
       - checkout
       - restore_cache:
-          keys: [frontend-build]
+          keys: [frontend-depnd]
       - run:
-          name: frontend test
+          name: Frontend unit test
           command: |
             cd frontend
-            npm i
-            npm run test 
+            npm install
+            npm test 
 
   test-backend:
     docker:
-      - image: circleci/node:13.8.0
+      - image: cimg/node:13.8.0
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-build]
+          keys: [backend-depnd]
       - run:
-          name: backend test
+          name: Backend unit test
           command: |
             cd backend
             npm install
             npm test
-      # - notify_on_failure
+      - notify_on_failure
 
   scan-frontend:
     docker:
-      - image: circleci/node:13.8.0
+      - image: cimg/node:13.8.0
     steps:
       - checkout
       - restore_cache:
-          keys: [frontend-build]
+          keys: [frontend-depnd]
       - run:
-          name: frontend scan
+          name: Frontend scan
           command: |
             cd frontend
+            npm install
+            npm audit fix --audit-level=critical --force
+            npm audit fix --audit-level=critical --force
             npm audit --audit-level=critical
-      # - notify_on_failure
+      - notify_on_failure
 
   scan-backend:
     docker:
-      - image: circleci/node:13.8.0
+      - image: cimg/node:13.8.0
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-build]
+          keys: [backend-depnd]
       - run:
-          name: backend scan
+          name: Backend scan
           command: |
             cd backend
             npm install
             npm audit fix --audit-level=critical --force
+            npm audit fix --audit-level=critical --force
             npm audit --audit-level=critical
-      # - notify_on_failure
+      - notify_on_failure
       
   deploy-infrastructure:
     docker:
@@ -197,7 +191,7 @@ jobs:
             --template-file .circleci/files/backend.yml \
             --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
             --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  \
-            --tags project=udapeople
+            --tags project=project3
       - run:
           name: creating frontend infrastructure
           command: |
@@ -205,7 +199,7 @@ jobs:
             --template-file .circleci/files/frontend.yml \
             --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
             --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  \
-            --tags project=udapeople
+            --tags project=project3
       - run:
           name: Add backend EC2 IP to ansible inventory file
           command: |
@@ -220,8 +214,7 @@ jobs:
           paths:
             - project/.circleci/ansible/inventory.txt
       - destroy-environment
- 
-            
+
   configure-infrastructure:
     docker:
       - image: cimg/base:2022.04
@@ -243,7 +236,7 @@ jobs:
 
   run-migrations:
     docker:
-      - image: cimg/node:13.8.0 
+      - image: cimg/node:13.8.0
     steps:
       - checkout
       - install_awscli
@@ -288,6 +281,7 @@ jobs:
             --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
             --query 'Reservations[*].Instances[*].PublicIpAddress' \
             --output text)
+
             echo "API_URL=http://${BACKEND_IP}:3030" >> frontend/.env
             cat frontend/.env
       - run:
@@ -310,8 +304,7 @@ jobs:
       - install_ansible
       - install_nodejs
       - add_ssh_keys:
-          fingerprints: 
-             - "37:bf:d3:a8:d6:56:09:53:05:e3:02:e5:07:53:f3:86" # CircleCI SSH key
+          fingerprints: ["37:bf:d3:a8:d6:56:09:53:05:e3:02:e5:07:53:f3:86"]
       - attach_workspace:
           at: ~/
       - restore_cache:
@@ -355,6 +348,7 @@ jobs:
             --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
             --query 'Reservations[*].Instances[*].PublicIpAddress' \
             --output text)
+
             export API_URL=http://${BACKEND_IP}:3030
             if curl -s ${API_URL}/api/status | grep "ok"
             then 
@@ -383,54 +377,58 @@ jobs:
       - checkout
       - install_awscli
       - install_nodejs
+      - attach_workspace:
+          at: ~/
       - run:
-           name: deployment 
+           name: getting the old workfow id to for cleanup later 
            command: |
-            export WorkflowID=$(aws cloudformation \
+            WorkflowID=$(aws cloudformation \
             list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
-            --no-paginate --output text) 
+            --no-paginate --output text)
             echo $workflowID >> ./workflow.txt
             cat ./workflow.txt
-    # curl https://kvdb.io/${KVDB_BUCKET}/migration_${CIRCLE_WORKFLOW_ID:0:7} -d '$WorkflowID'
+            curl https://kvdb.io/${KVDB_BUCKET}/migration_${CIRCLE_WORKFLOW_ID:0:7} -d '$WorkflowID'
       - run:
           name: Update cloudfront distribution
           command: |
             aws cloudformation deploy \
             --template-file .circleci/files/cloudfront.yml \
             --stack-name InitialStack \
-            --parameter-overrides WorkflowID="udapeople-${CIRCLE_WORKFLOW_ID:0:7}" \
-            --tags project=udapeople
-    
-      # - destroy-environment
-      # - revert-migrations
+            --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
+            --tags project=udapeople    
+      - destroy-environment
+      - revert-migrations
 
-# cleanup:
-#     docker:
-#       # Docker image here
-#     steps:
-#       # Checkout code from git
-#       - run:
-#           name: Get old stack workflow id
-#           command: |
-#             # your code here
-#             export OldWorkflowID="the id here"
-#             export STACKS=[] #put the list of stacks here
-#       - run:
-#           name: Remove old stacks and files
-#           command: |
-#             if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
-#             then
-#               # your code here
-#             fi
-            
-  # notify_on_success:
-  #   docker:
-  #     - image: cimg/base:2022.04
-  #   steps:
-  #     - slack/notify:
-  #         channel: D033Z58UL4E
-  #         event: pass
-  #         template: success_tagged_deploy_1
+  # cleanup:
+  #     docker:
+  #       - image: cimg/base:2022.04
+  #     steps:
+  #       - checkout
+  #       - install_awscli
+  #       - attach_workspace:
+  #           at: ~/
+  #       - run:
+  #           name: Get old stack workflow id
+  #           command: |
+  #             # your code here
+  #             export OldWorkflowID="the id here"
+  #             export STACKS=[] #put the list of stacks here
+  #       - run:
+  #           name: Remove old stacks and files
+  #           command: |
+  #             if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
+  #             then
+  #               # your code here
+  #             fi
+
+  notify_on_success:
+    docker:
+      - image: cimg/base:2022.04
+    steps:
+      - slack/notify:
+          channel: C033R6TGLDV
+          event: pass
+          template: success_tagged_deploy_1
       
 
 workflows:
@@ -447,30 +445,32 @@ workflows:
       - scan-frontend:
           requires: [build-frontend]
       - deploy-infrastructure:
-            requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+           requires: [test-frontend, test-backend, scan-frontend, scan-backend]
       - configure-infrastructure:
-             requires: [deploy-infrastructure]
+          requires: [deploy-infrastructure]
       # - run-migrations:
-          # requires: [configure-infrastructure]
-      # - deploy-frontend:
-          # requires: [run-migrations]
-      # - deploy-backend:
-          # requires: [run-migrations]
+      #     requires: [configure-infrastructure]
+      - deploy-frontend:
+          requires: [run-migrations]
+      - deploy-backend:
+          requires: [run-migrations]
       # - smoke-test:
-          # requires: [deploy-backend, deploy-frontend]
-      # - cloudfront-update
-      #     requires: [smoke-test]
+      #     requires: [deploy-backend, deploy-frontend]
+      - cloudfront-update:
+          requires: [smoke-test]
       # - cleanup:
       #     requires: [cloudfront-update]
-
-
-
-      # - notify_on_success:
-      #     requires: 
-      #       - build-frontend
-      #       - build-backend
-      #       - test-frontend
-      #       - test-backend
-      #       - scan-backend
-      #       - scan-frontend
-      #       - deploy-infrastructure
+      - notify_on_success:
+          requires: 
+            - build-frontend
+            - build-backend
+            - test-frontend
+            - test-backend
+            - scan-backend
+            - scan-frontend
+            - deploy-infrastructure
+            # - run-migrations
+            - deploy-frontend
+            - deploy-backend
+            # - smoke-test
+            - cloudfront-update
