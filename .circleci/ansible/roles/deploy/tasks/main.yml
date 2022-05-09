@@ -13,11 +13,13 @@
   shell: |
       cd /home/ubuntu/backend
       npm i
+
 - name: "excuting with pm"
   shell: |
       cd /home/ubuntu/backend/dist
       pm2 stop default
       pm2 start main.js
+
 - name: "configure pm2 to start the server"
   become: true
   shell: |
