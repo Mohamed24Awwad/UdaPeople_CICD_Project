@@ -189,7 +189,6 @@ jobs:
             --stack-name "frontend-infrastructure-${CIRCLE_WORKFLOW_ID:0:7}" \
             --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
       
-      # - slack-notification-fail
       # - destroy-environment   
   
 
