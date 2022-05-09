@@ -181,7 +181,7 @@ jobs:
           name: create backend infrastructure
           command: |
             aws cloudformation deploy \
-            --template-file .circleci/files/backend.yml \
+            --template-file .circleci/ansible/files/backend.yml \
             --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
             --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  \
             --tags project=project3
@@ -189,7 +189,7 @@ jobs:
           name: creating frontend infrastructure
           command: |
             aws cloudformation deploy \
-            --template-file .circleci/files/frontend.yml \
+            --template-file .circleci/ansible/files/frontend.yml \
             --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
             --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  \
             --tags project=project3
@@ -414,14 +414,7 @@ jobs:
   #               # your code here
   #             fi
 
-  notify_on_success:
-    docker:
-      - image: cimg/base:2022.04
-    steps:
-      - slack/notify:
-          channel: D033Z58UL4E
-          event: pass
-          template: success_tagged_deploy_1
+  
       
 
 workflows:
