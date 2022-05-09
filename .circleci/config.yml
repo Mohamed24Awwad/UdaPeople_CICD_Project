@@ -426,7 +426,7 @@ jobs:
       - image: cimg/base:2022.04
     steps:
       - slack/notify:
-          channel: C033R6TGLDV
+          channel: D033Z58UL4E
           event: pass
           template: success_tagged_deploy_1
       
@@ -456,8 +456,8 @@ workflows:
       #     requires: [run-migrations]
       # - smoke-test:
       #     requires: [deploy-backend, deploy-frontend]
-      - cloudfront-update:
-          requires: [smoke-test]
+      # - cloudfront-update:
+      #     requires: [smoke-test]
       # - cleanup:
       #     requires: [cloudfront-update]
       - notify_on_success:
