@@ -1,18 +1,18 @@
 version: 2.1
 
-orbs:
-  slack: circleci/slack@4.9.3
+# orbs:
+  # slack: circleci/slack@4.9.3
  # ---------------------------------------------------------------------------- #
  #                              Slack Notifications                             #
  # ---------------------------------------------------------------------------- #
 
-  commands:
-    notify_on_failure:
-      steps:
-       - slack/notify:
-          event: fail
-          channel: MohamedAwwad
-          template: basic_fail_1
+  # commands:
+  #   notify_on_failure:
+  #     steps:
+  #      - slack/notify:
+  #         event: fail
+  #         channel: MohamedAwwad
+  #         template: basic_fail_1
   
    
 
@@ -40,10 +40,10 @@ jobs:
           key: v1-frontend-build
           paths:
             - ~/project/frontend/node_modules
-      - notify_on_failure:
-          steps:
-            - slack/notify:
-              event: fail
+      # - notify_on_failure:
+      #     steps:
+      #       - slack/notify:
+      #         event: fail
 
   build-backend:
     docker:
@@ -64,10 +64,10 @@ jobs:
           key: v1-backend-build
           paths:
             - ~/project/backend/node_modules
-      - notify_on_failure:
-          steps:
-            - slack/notify:
-              event: fail
+      # - notify_on_failure:
+      #     steps:
+      #       - slack/notify:
+      #         event: fail
 
 
   test-frontend:
@@ -101,10 +101,10 @@ jobs:
             cd backend
             npm install
             npm test
-      - notify_on_failure:
-          steps:
-            - slack/notify:
-              event: fail
+      # - notify_on_failure:
+      #     steps:
+      #       - slack/notify:
+      #         event: fail
 
   scan-frontend:
     docker:
@@ -118,10 +118,10 @@ jobs:
           command: |
             cd frontend
             npm audit --audit-level=critical
-      - notify_on_failure:
-          steps:
-            - slack/notify:
-              event: fail
+      # - notify_on_failure:
+      #     steps:
+      #       - slack/notify:
+      #         event: fail
 
   scan-backend:
     docker:
@@ -137,10 +137,10 @@ jobs:
             npm install
             npm audit fix --audit-level=critical --force
             npm audit --audit-level=critical
-      - notify_on_failure:
-          steps:
-            - slack/notify:
-              event: fail
+      # - notify_on_failure:
+      #     steps:
+      #       - slack/notify:
+      #         event: fail
 
 
 notify_on_sucess:
@@ -165,14 +165,14 @@ workflows:
           requires: [build-backend]
        - scan-frontend:
           requires: [build-frontend]
-       - notify_on_sucess:
-          requires:
-          - build-frontend
-          - build-backend
-          - test-frontend
-          - test-backend
-          - scan-frontend 
-          - scan-backend
+      #  - notify_on_sucess:
+      #     requires:
+      #     - build-frontend
+      #     - build-backend
+      #     - test-frontend
+      #     - test-backend
+      #     - scan-frontend 
+      #     - scan-backend
 
       
           
