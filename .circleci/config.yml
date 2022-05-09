@@ -6,14 +6,7 @@ version: 2.1
  #                              Slack Notifications                             #
  # ---------------------------------------------------------------------------- #
 
-  # commands:
-  #   notify_on_failure:
-  #     steps:
-  #      - slack/notify:
-  #         event: fail
-  #         channel: MohamedAwwad
-  #         template: basic_fail_1
-  
+ 
    
 
 # ---------------------------------------------------------------------------- #
@@ -40,10 +33,7 @@ jobs:
           key: v1-frontend-build
           paths:
             - ~/project/frontend/node_modules
-      # - notify_on_failure:
-      #     steps:
-      #       - slack/notify:
-      #         event: fail
+    
 
   build-backend:
     docker:
@@ -64,11 +54,7 @@ jobs:
           key: v1-backend-build
           paths:
             - ~/project/backend/node_modules
-      # - notify_on_failure:
-      #     steps:
-      #       - slack/notify:
-      #         event: fail
-
+    
 
   test-frontend:
     docker:
@@ -83,11 +69,7 @@ jobs:
             cd frontend
             npm i
             npm run test  
-      # - notify_on_failure:
-      #     steps:
-      #       - slack/notify:
-      #         event: fail
-
+    
   test-backend:
     docker:
       - image: circleci/node:13.8.0
@@ -101,11 +83,7 @@ jobs:
             cd backend
             npm install
             npm test
-      # - notify_on_failure:
-      #     steps:
-      #       - slack/notify:
-      #         event: fail
-
+   
   scan-frontend:
     docker:
       - image: circleci/node:13.8.0
@@ -118,10 +96,7 @@ jobs:
           command: |
             cd frontend
             npm audit --audit-level=critical
-      # - notify_on_failure:
-      #     steps:
-      #       - slack/notify:
-      #         event: fail
+     
 
   scan-backend:
     docker:
@@ -137,45 +112,89 @@ jobs:
             npm install
             npm audit fix --audit-level=critical --force
             npm audit --audit-level=critical
-      # - notify_on_failure:
-      #     steps:
-      #       - slack/notify:
-      #         event: fail
     
-  deploy-infrastructure:
+  deploy_backend_infrastructure:
     docker:
-      - image: cimg/base:2021.04
+      - image: amazon/aws-cli
     steps:
       - checkout
-      - dependencies
-      # Checkout code from git
       - run:
-          name: Ensure back-end infrastructure exists
+          name: Deploy the backend infrastructure using cloudformation
           command: |
             aws cloudformation deploy \
-            --template-file .circleci/files/backend.yml \
-            --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7} \
-            --parameter-overrides ID=${CIRCLE_WORKFLOW_ID:0:7} \
-            --tags project=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}
+              --template-file .circleci/files/backend.yml \
+              --parameter-overrides ID="prod-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --stack-name udapeople-backend-prod-${CIRCLE_WORKFLOW_ID:0:7}
       - run:
-          name: Ensure front-end infrastructure exist
+          name: Save backend URL and IP (for ansible)
           command: |
+            BACKEND_AWS_PUBLIC_IP=$(aws ec2 describe-instances \
+              --filters "Name=tag:Name,Values=backend-prod-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --output text)
+            echo "http://$BACKEND_AWS_PUBLIC_IP:3030" >> .circleci/outputs/backend_url.txt
+            echo "[all]" >> .circleci/ansible/inventory.txt
+            echo "$BACKEND_AWS_PUBLIC_IP" >> .circleci/ansible/inventory.txt
+            cat .circleci/outputs/backend_url.txt
+      - run: yum -y install tar gzip
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - project/.circleci/outputs/backend_url.txt
+            - project/.circleci/ansible/inventory.txt
+      - destroy_environment:
+          workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"
+
+  deploy-infrastructure:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+
+      - run:
+          name: Install prerequsites
+          command: |
+            yum -y install tar gzip jq git
+      - run:
+          name: Ensure backend infrastructure exists
+          command: |
+            # build-backend:
             aws cloudformation deploy \
-            --template-file .circleci/files/frontend.yml \
-            --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7} \
-            --parameter-overrides ID=${CIRCLE_WORKFLOW_ID:0:7} \
-            --tags project=udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}
+              --template-file .circleci/files/backend.yml \
+              --tags project=udapeople \
+              --stack-name "backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --parameter-overrides ID=${CIRCLE_WORKFLOW_ID:0:7}
       - run:
-          name: Add back-end ip to ansible inventory
+          name: Add backend ip to ansible inventory
           command: |
-            aws cloudformation describe-stacks \
-            --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-            --query "Stacks[0].Outputs[0].OutputValue" \
-            --output text >> .circleci/ansible/inventory.txt
+            BACKEND_IP=`aws ec2 describe-instances \
+              --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --query "Reservations[*].Instances[*].[PublicDnsName]" \
+              --output text | tr -d '\n'`
+            echo $BACKEND_IP >> .circleci/ansible/inventory.txt
+            cat .circleci/ansible/inventory.txt
+            # put it in the shared memory
+            curl -H "Content-Type: text/plain" \
+              -H "token: e38aee29-a976-4696-843d-2d115c52219a" \
+              --request PUT \
+              --data "$BACKEND_IP" https://api.memstash.io/values/BACKEND_IP_${CIRCLE_WORKFLOW_ID:0:7}
       - persist_to_workspace:
           root: ~/
           paths:
             - project/.circleci/ansible/inventory.txt
+
+      - run:
+          name: Ensure frontend infrastructure exist
+          command: |
+            # build-frontend:
+            aws cloudformation deploy \
+            --template-file .circleci/files/frontend.yml \
+            --tags project=udapeople \
+            --stack-name "frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
+            --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
+      
+      # - slack-notification-fail
+      # - destroy-environment   
   
 
 workflows:
@@ -192,7 +211,11 @@ workflows:
        - scan-frontend:
           requires: [build-frontend]
        - deploy-infrastructure:
-          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+          requires:
+            - scan-backend
+            - scan-frontend
+            - test-backend
+            - test-frontend
 
       
           
