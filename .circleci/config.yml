@@ -93,7 +93,7 @@ jobs:
           key: v1-frontend-build
           paths:
             - ~/project/frontend/node_modules
-      - notify_on_failure
+      # - notify_on_failure
 
   build-backend:
     docker:
@@ -114,7 +114,7 @@ jobs:
           key: v1-backend-build
           paths:
             - ~/project/backend/node_modules
-      - notify_on_failure
+      # - notify_on_failure
 
   test-frontend:
     docker:
@@ -143,7 +143,7 @@ jobs:
             cd backend
             npm install
             npm test
-      - notify_on_failure
+      # - notify_on_failure
 
   scan-frontend:
     docker:
@@ -157,7 +157,7 @@ jobs:
           command: |
             cd frontend
             npm audit --audit-level=critical
-      - notify_on_failure
+      # - notify_on_failure
 
   scan-backend:
     docker:
@@ -173,7 +173,7 @@ jobs:
             npm install
             npm audit fix --audit-level=critical --force
             npm audit --audit-level=critical
-      - notify_on_failure
+      # - notify_on_failure
       
   deploy-infrastructure:
     docker:
@@ -414,14 +414,14 @@ jobs:
 #               # your code here
 #             fi
             
-  notify_on_success:
-    docker:
-      - image: cimg/base:2022.04
-    steps:
-      - slack/notify:
-          channel: D033Z58UL4E
-          event: pass
-          template: success_tagged_deploy_1
+  # notify_on_success:
+  #   docker:
+  #     - image: cimg/base:2022.04
+  #   steps:
+  #     - slack/notify:
+  #         channel: D033Z58UL4E
+  #         event: pass
+  #         template: success_tagged_deploy_1
       
 
 workflows:
