@@ -187,7 +187,7 @@ jobs:
           paths:
             - project/.circleci/ansible/inventory.txt
       
-      # - destroy-environment
+      - destroy-environment
 
   configure-infrastructure:
     docker:
@@ -208,7 +208,7 @@ jobs:
             apk add --upgrade bash ansible openssh-client
             cat inventory.txt
             ansible-playbook -i inventory.txt configure-server.yml
-      # - destroy-environment
+      - destroy-environment
 
   run-migrations:
     docker:
