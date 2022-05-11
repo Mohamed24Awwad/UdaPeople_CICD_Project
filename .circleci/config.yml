@@ -198,8 +198,7 @@ jobs:
       - install_awscli
       - install_ansible
       - add_ssh_keys:
-          fingerprints: 
-          - "b8:77:f4:48:af:e2:31:ba:cb:d5:32:42:43:4f:46:26"
+          fingerprints: ["b8:77:f4:48:af:e2:31:ba:cb:d5:32:42:43:4f:46:26"]
       - attach_workspace:
           at: ~/
       - run:
@@ -289,7 +288,7 @@ jobs:
             cd backend
             npm install
       - run:
-          name: Package Backend.
+          name: Package Backend
           command: |
             cd backend
             npm run build
@@ -397,12 +396,12 @@ workflows:
           #     only: [master]
       - configure-infrastructure:
           requires: [deploy-infrastructure]
-      - run-migrations:
+      # - run-migrations
+          # requires: [configure-infrastructure]
+      - deploy-frontend: 
+          requires: [configure-infrastructure] #,run-migrations
+      - deploy-backend:
           requires: [configure-infrastructure]
-      # - deploy-frontend: 
-      #     requires: [run-migrations] 
-      # - deploy-backend:
-      #     requires: [run-migrations]
       # - smoke-test:
       #     requires: [deploy-backend, deploy-frontend]
       # - cloudfront-update:
