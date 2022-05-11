@@ -1,5 +1,5 @@
 ---
-- name: "deployment play" 
+- name: "Deployment Playbook" 
   hosts: web
   remote_user: ubuntu
   become: true
