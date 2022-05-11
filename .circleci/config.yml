@@ -341,20 +341,25 @@ jobs:
       - destroy-environment
       - revert-migrations
 
-#   cloudfront-update:
-#     docker:
-#       # Docker image here that supports AWS CLI
-#     steps:
-#       # Checkout code from git
-#       - run:
-#           name: Install dependencies
-#           command: |
-#             # your code here
-#       - run:
-#           name: Update cloudfront distribution
-#           command: |
-#             # your code here
-#       # Here's where you will add some code to rollback on failure
+  cloudfront-update:
+    docker:
+      - image: cimg/base:2022.04
+    steps:
+      - checkout
+      - install_awscli
+      - install_nodejs
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Update cloudfront distribution
+          command: |
+            aws cloudformation deploy \
+            --template-file .circleci/files/cloudfront.yml \
+            --stack-name "udapeople-CloudFront-${CIRCLE_WORKFLOW_ID:0:7}" \
+            --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
+            --tags project=udapeople    
+      - destroy-environment
+      - revert-migrations
 
 # cleanup:
 #     docker:
@@ -404,7 +409,7 @@ workflows:
           requires: [run-migrations]                             # requires: [configure-infrastructure]
       # - smoke-test:
       #     requires: [deploy-infrastructure, deploy-backend, deploy-frontend]
-      # - cloudfront-update:
-      #     requires: [smoke-test]
+      - cloudfront-update
+          # requires: [smoke-test]
       # - cleanup:
       #     requires: [cloudfront-update]
