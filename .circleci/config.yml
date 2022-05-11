@@ -205,7 +205,7 @@ jobs:
       - run:
           name: Configure server
           command: |
-            cd ~/project/.circleci/ansible
+            cd .circleci/ansible
             ansible-playbook configure-server.yml --private-key udacity.pem --inventory-file=inventory.txt
 
   run-migrations:
