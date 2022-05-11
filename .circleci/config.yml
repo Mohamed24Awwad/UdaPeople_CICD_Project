@@ -198,10 +198,7 @@ jobs:
       - install_awscli
       - install_ansible
       - add_ssh_keys:
-
-          fingerprints: 
-            - "83:f7:ba:84:a8:a5:9e:96:6b:07:f6:26:b5:24:ed:96"
-
+          fingerprints: ["83:f7:ba:84:a8:a5:9e:96:6b:07:f6:26:b5:24:ed:96"]
       - attach_workspace:
           at: ~/
       - run:
@@ -219,21 +216,18 @@ jobs:
     steps:
       - checkout
       - install_awscli
-      - restore_cache:
-          keys: [backend-depnd]
       - run:
           name: Run migrations
           command: |
-              cd backend
-              npm install
-              npm run migrations >> migrations_dump.txt 
-      - run:
-          name: Send migration results to Kvdb.io
-          command: |
             cd backend
-            if grep -q "No migrations are pending" migrations_dump.txt
+            npm install
+            npm run migrations > migrations_dump.txt
+      - run:
+          name: Send migration status to kvdb.io
+          command: |
+            if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt
             then
-              curl -d '1' https://kvdb.io/${KVDB_BUCKET}/migration_${CIRCLE_WORKFLOW_ID:0:7} 
+              curl https://kvdb.io/${KVDB_BUCKET}/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
             fi
       - destroy-environment
       - revert-migrations
@@ -279,10 +273,8 @@ jobs:
       - install_ansible
       - install_nodejs
       - add_ssh_keys:
-
-          fingerprints: 
-           - "83:f7:ba:84:a8:a5:9e:96:6b:07:f6:26:b5:24:ed:96"  
-
+          fingerprints:
+          - "83:f7:ba:84:a8:a5:9e:96:6b:07:f6:26:b5:24:ed:96"
       - attach_workspace:
           at: ~/
       - restore_cache:
@@ -334,14 +326,14 @@ jobs:
               exit 1
             fi
       - run:
-          name: Frontend smoke test
+          name: Frontend smoke test.
           command: |
             FRONTEND_WEBSITE=http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website.${AWS_DEFAULT_REGION}.amazonaws.com
             if curl -s $FRONTEND_WEBSITE | grep "Welcome"
             then
-              exit 1
+              exit 0
             else
-              exit 2
+              exit 1
             fi
       - destroy-environment
       - revert-migrations
@@ -393,7 +385,6 @@ workflows:
       #     requires: [build-backend]
       # - scan-frontend:
       #     requires: [build-frontend]
-
       - deploy-infrastructure
           # requires: [test-frontend, test-backend, scan-frontend, scan-backend]
           # filters:
@@ -401,12 +392,12 @@ workflows:
           #     only: [master]
       - configure-infrastructure:
           requires: [deploy-infrastructure]
-      - run-migrations
-          # requires: [configure-infrastructure]
-      # - deploy-frontend: 
-      #     requires: [configure-infrastructure] #,run-migrations
-      # - deploy-backend:
+      # - run-migrations:
       #     requires: [configure-infrastructure]
+      # - deploy-frontend:
+      #     requires: [run-migrations]
+      # - deploy-backend:
+      #     requires: [run-migrations]
       # - smoke-test:
       #     requires: [deploy-backend, deploy-frontend]
       # - cloudfront-update:
