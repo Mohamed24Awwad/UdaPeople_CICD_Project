@@ -1,1 +1,6 @@
+(Public Github Udapeople Repo )
 https://github.com/Mohamed24Awwad/UdaPeople_CICD_Project [URL01]
+
+(Public S3 Bucket URL)
+https://udapeople-8f940da.s3.us-west-2.amazonaws.com/index.html [URL02]
+
