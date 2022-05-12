@@ -1,17 +1,21 @@
 version: 2.1
-
+       # ---------------------------------------------------------------------------- #
+       #                                  Global Orbs                                 #
+       # ---------------------------------------------------------------------------- #
 orbs: 
   node: circleci/node@5.0.2
   slack: circleci/slack@4.9.4
-
+  
 commands:
-  notify_on_failure:
+    # ----------------- Slack Commands For Handling Notifications ---------------- #
+  notify_on_failure:               
     steps:
       - slack/notify:
           channel: C03EJAMQW2H
           event: fail
           template: basic_fail_1
 
+  # -- All the performed commands got from the Ansible Official Documentation and baed on Ubuntu distro-- #
   install_awscli:
     description: "Installs AWS_CLI"
     steps:
@@ -73,17 +77,21 @@ commands:
               npm install
               npm run migration:revert
             fi
+
+      # ---------------------------------------------------------------------------- #
+      #                                 Jobs Section                                 #
+      # ---------------------------------------------------------------------------- #
             
 jobs:
   build-frontend:
     docker:
-      - image: cimg/node:13.8.0
+      - image: cimg/node:13.8.0     #Conveinent Image Provided by CircleCi for NodeJS
     steps:
       - checkout
       - restore_cache:
           keys: [frontend-depnd]
       - run:
-          name: Build front-end
+          name: Building FrontEnd
           command: |
             cd frontend
             npm install
@@ -101,7 +109,7 @@ jobs:
       - restore_cache:
           keys: [backend-depnd]
       - run:
-          name: Back-end build
+          name: Building BackEnd
           command: |
             cd backend
             npm install
@@ -119,7 +127,7 @@ jobs:
       - restore_cache:
           keys: [frontend-depnd]
       - run:
-          name: Frontend unit test
+          name: Unit Testing FrontEnd
           command: |
             cd frontend
             npm install
@@ -132,7 +140,7 @@ jobs:
       - restore_cache:
           keys: [backend-depnd]
       - run:
-          name: Backend unit test
+          name: Unit Testing BackEnd
           command: |
             cd backend
             npm install
@@ -147,7 +155,7 @@ jobs:
       - restore_cache:
           keys: [frontend-depnd]
       - run:
-          name: Frontend scan
+          name:   Scanning FrontEnd
           command: |
             cd frontend
             npm install
@@ -164,7 +172,7 @@ jobs:
       - restore_cache:
           keys: [backend-depnd]
       - run:
-          name: Backend scan
+          name:  Scanning BackEnd
           command: |
             cd backend
             npm install
@@ -188,7 +196,7 @@ jobs:
             --template-file .circleci/files/backend.yml \
             --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
             --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  \
-            --tags project=project3
+            --tags project=udapeople
       - run:
           name: creating frontend infrastructure
           command: |
@@ -196,9 +204,9 @@ jobs:
             --template-file .circleci/files/frontend.yml \
             --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
             --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  \
-            --tags project=project3
+            --tags project=udapeople
       - run:
-          name: Add backend EC2 IP to ansible inventory file
+          name: Add Backend EC2 IP To Ansible Inventory File
           command: |
             BACKEND_IP=$(aws ec2 describe-instances \
             --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
@@ -220,11 +228,11 @@ jobs:
       - install_awscli
       - install_ansible
       - add_ssh_keys:
-          fingerprints: ["5f:14:6b:6c:f9:f7:cc:34:80:43:51:c2:fc:a9:67:89"]
+          fingerprints: ["82:96:0d:6f:0e:e4:86:72:cc:3d:07:6c:21:9a:61:c8"]
       - attach_workspace:
           at: ~/
       - run:
-          name: Configure server
+          name: Setup Server Configuration
           command: |
             cd .circleci/ansible
             cat inventory.txt
@@ -300,7 +308,7 @@ jobs:
       - install_ansible
       - install_nodejs
       - add_ssh_keys:
-          fingerprints: ["5f:14:6b:6c:f9:f7:cc:34:80:43:51:c2:fc:a9:67:89"]
+          fingerprints: ["82:96:0d:6f:0e:e4:86:72:cc:3d:07:6c:21:9a:61:c8"]
       - attach_workspace:
           at: ~/
       - restore_cache:
@@ -416,6 +424,11 @@ jobs:
               else
                 echo "No stacks to be deleted"
               fi
+
+
+      # ---------------------------------------------------------------------------- #
+      #                     Slack Job For Successfully Processing                    #
+      # ---------------------------------------------------------------------------- #
   notify_on_success:
     docker:
       - image: cimg/base:2022.04
@@ -424,6 +437,11 @@ jobs:
           channel: C03EJAMQW2H
           event: pass
           template: success_tagged_deploy_1
+
+
+          # ---------------------------------------------------------------------------- #
+          #                      Workflow Section (Performing Jobs)                      #
+          # ---------------------------------------------------------------------------- #
       
 workflows:
   application_workflow:
@@ -438,11 +456,8 @@ workflows:
           requires: [build-backend]
       - scan-frontend:
           requires: [build-frontend]
-      # - deploy-infrastructure:
-      #      requires: [test-frontend, test-backend, scan-frontend, scan-backend]
-      #      filters:
-      #       branches:
-      #         only: [master]
+      - deploy-infrastructure:
+           requires: [test-frontend, test-backend, scan-frontend, scan-backend]
       # - configure-infrastructure:
       #     requires: [deploy-infrastructure]
       # - run-migrations:

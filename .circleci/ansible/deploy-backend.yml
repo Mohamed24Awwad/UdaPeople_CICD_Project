@@ -1,6 +1,6 @@
 ---
 - name: "Deployment Playbook" 
-  hosts: webserver
+  hosts: web
   remote_user: ubuntu
   become: true
   become_method: sudo
