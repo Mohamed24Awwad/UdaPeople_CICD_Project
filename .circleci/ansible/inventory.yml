@@ -1,8 +1,6 @@
 
 all:
   hosts:
-    webservers
-  children:
     webservers:
       hosts:
         54.213.222.188
