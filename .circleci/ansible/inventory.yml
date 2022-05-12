@@ -3,4 +3,4 @@ all:
   hosts:
     webservers:
       hosts:
-        54.213.222.188
+        - webserver1
