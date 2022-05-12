@@ -209,7 +209,7 @@ jobs:
       - destroy-environment
   configure-infrastructure:
     docker:
-      - image: python:3.7-alpine3.11
+      - image: cimg/base:2022.04
     steps:
       - checkout
       - install_awscli
