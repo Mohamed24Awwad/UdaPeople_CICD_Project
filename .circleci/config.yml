@@ -47,7 +47,7 @@ commands:
 
 
 
-      # ------- In case we got an issue with infrastructure, we can Rollback ------- #
+      # ------- In case we got an issue with infrastructure, we can Rollback /Rollback Phase /------- #
   destroy-environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
     parameters:
@@ -87,6 +87,7 @@ commands:
       # ---------------------------------------------------------------------------- #
             
 jobs:
+       # --------------------------------- CI Phase --------------------------------- #
   build-frontend:
     docker:
       - image: cimg/node:13.8.0     #Conveinent Image Provided by CircleCi for NodeJS
@@ -184,6 +185,8 @@ jobs:
             npm audit fix --audit-level=critical --force
             npm audit --audit-level=critical
       - notify_on_failure
+
+                        # --------------------------- Infrastructure Phase --------------------------- #
       
   deploy-infrastructure:
     docker:
@@ -243,6 +246,8 @@ jobs:
             ansible-playbook -i inventory.txt configure-server.yml
       - destroy-environment
 
+                   # ---------------------------- Database Migrations --------------------------- #
+
   run-migrations:
     docker:
       - image: cimg/node:13.8.0
@@ -269,6 +274,8 @@ jobs:
       - destroy-environment
       - revert-migrations
 
+                     # ------------------------------ Deploy FrontEnd ----------------------------- #
+
   deploy-frontend:
     docker:
       - image: cimg/base:2022.04 
@@ -279,7 +286,7 @@ jobs:
       - restore_cache:
           keys: [backend-depnd]
       - run:
-          name: Install dependencies
+          name: Install Front-End Dependencies
           command: |
             cd frontend
             npm install
@@ -293,7 +300,7 @@ jobs:
             echo "API_URL=http://${BACKEND_IP}:3030" >> frontend/.env
             cat frontend/.env
       - run:
-          name: Deploy frontend objects
+          name: Deploy Front-End Application to S3
           command: |
             cd frontend
             npm install
@@ -302,6 +309,8 @@ jobs:
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
       - destroy-environment
       - revert-migrations
+
+                      # ------------------------------ Deploy Backend ------------------------------ #
                     
   deploy-backend:
     docker:
@@ -318,12 +327,12 @@ jobs:
       - restore_cache:
           keys: [backend-depnd]
       - run:
-          name: Install dependencies
+          name: Install Back-End Dependencies
           command: |
             cd backend
             npm install
       - run:
-          name: package backend
+          name: Packging Back-End Application
           command: |
             cd backend
             npm i
@@ -342,6 +351,8 @@ jobs:
       - destroy-environment
       - revert-migrations
 
+      
+                       # ----------------------------- Smoke Test Phase ----------------------------- #
   smoke-test:
     docker:
       - image: cimg/base:2022.04
@@ -350,7 +361,7 @@ jobs:
       - install_awscli
       - install_nodejs
       - run:
-          name: Backend smoke test.
+          name: Backend Smoke Test
           command: |
             BACKEND_IP=$(aws ec2 describe-instances \
             --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
@@ -364,7 +375,7 @@ jobs:
                 exit 1
             fi
       - run:
-          name: Frontend smoke test.
+          name: Frontend Smoke Test
           command: |
             FRONTEND_TEST=http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website.${AWS_DEFAULT_REGION}.amazonaws.com
             if curl -s $FRONTEND_TEST | grep "Welcome"
@@ -376,26 +387,33 @@ jobs:
       - destroy-environment
       - revert-migrations
 
-
+                      # ------------------------------ Promotion Phase ----------------------------- #
   cloudfront-update:
     docker:
-      - image: cimg/base:2022.04
+      - image: cimg/base:stable
     steps:
       - checkout
       - install_awscli
       - install_nodejs
-      - attach_workspace:
-          at: ~/
+      - run:
+          name: Save Old Workflow ID to kvdb.io
+          command: |
+            export OLD_WORKFLOW_ID=$(aws cloudformation \
+                      list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
+                      --no-paginate --output text)
+            echo "Old Wokflow ID: $OLD_WORKFLOW_ID"
+            curl https://kvdb.io/${KVDB_BUCKET}/old_workflow_id -d "${OLD_WORKFLOW_ID}"
       - run:
           name: Update cloudfront distribution
           command: |
             aws cloudformation deploy \
-            --template-file .circleci/files/cloudfront.yml \
-            --stack-name "udapeople-CloudFront-${CIRCLE_WORKFLOW_ID:0:7}" \
-            --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
-            --tags project=udapeople    
+              --template-file .circleci/files/cloudfront.yml \
+              --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
+              --stack-name InitialStack
       - destroy-environment
       - revert-migrations
+
+                   # ------------------------------- Cleanup Phase ------------------------------ #
 
   cleanup:
       docker:
@@ -450,45 +468,45 @@ jobs:
 workflows:
   udapeople_workflow:
     jobs:
-      # - build-frontend
-      # - build-backend
-      # - test-frontend:
-      #     requires: [build-frontend]
-      # - test-backend:
-      #     requires: [build-backend]
-      # - scan-backend:
-      #     requires: [build-backend]
-      # - scan-frontend:
-      #     requires: [build-frontend]
-      # - deploy-infrastructure:
-      #      requires: [test-frontend, test-backend, scan-frontend, scan-backend]
-      # - configure-infrastructure:
-      #     requires: [deploy-infrastructure]
-      # - run-migrations:
-      #     requires: [configure-infrastructure]
-      # - deploy-frontend:
-      #     requires: [run-migrations]
-      # - deploy-backend:
-      #     requires: [run-migrations]
-      # - smoke-test:
-      #     requires: [deploy-backend, deploy-frontend]
-      - cloudfront-update
-          # requires: [smoke-test]
+      - build-frontend
+      - build-backend
+      - test-frontend:
+          requires: [build-frontend]
+      - test-backend:
+          requires: [build-backend]
+      - scan-backend:
+          requires: [build-backend]
+      - scan-frontend:
+          requires: [build-frontend]
+      - deploy-infrastructure:
+           requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+      - configure-infrastructure:
+          requires: [deploy-infrastructure]
+      - run-migrations:
+          requires: [configure-infrastructure]
+      - deploy-frontend:
+          requires: [run-migrations]
+      - deploy-backend:
+          requires: [run-migrations]
+      - smoke-test:
+          requires: [deploy-backend, deploy-frontend]
+      - cloudfront-update:
+          requires: [smoke-test]
       # - cleanup:
       #     requires: [cloudfront-update]
       - notify_on_success:
           requires: 
-            # - build-frontend
-            # - build-backend
-            # - test-frontend
-            # - test-backend
-            # - scan-backend
-            # - scan-frontend
-            # - deploy-infrastructure
-            # - run-migrations
-            # - deploy-frontend
-            # - deploy-backend
-            # - smoke-test
+            - build-frontend
+            - build-backend
+            - test-frontend
+            - test-backend
+            - scan-backend
+            - scan-frontend
+            - deploy-infrastructure
+            - run-migrations
+            - deploy-frontend
+            - deploy-backend
+            - smoke-test
             - cloudfront-update
             # - cleanup
 
