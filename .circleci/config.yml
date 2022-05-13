@@ -491,4 +491,21 @@ workflows:
           requires: [smoke-test]
       - cleanup:
           requires: [cloudfront-update]
+
+     # ----------------- Slack Notification job on success status ----------------- #
+      - notify_on_success:
+          requires: 
+            - build-frontend
+            - build-backend
+            - test-frontend
+            - test-backend
+            - scan-backend
+            - scan-frontend
+            - deploy-infrastructure
+            - run-migrations
+            - deploy-frontend
+            - deploy-backend
+            - smoke-test
+            - cloudfront-update
+            - cleanup
      
