@@ -1,5 +1,3 @@
-[![CircleCI](https://circleci.com/gh/Mohamed24Awwad/UdaPeople_CICD_Project/tree/master.svg?style=svg)](https://circleci.com/gh/Mohamed24Awwad/UdaPeople_CICD_Project/tree/master)
-
 
 ## Give your Application Auto-Deploy Superpowers
 
