@@ -424,20 +424,14 @@ jobs:
         - attach_workspace:
             at: ~/
         - run:
-            name: Get old stack workflow id
+            name: Remove the old stacks from our production phase
             command: |
-              export OldWorkflowID="$(aws cloudformation \
-              list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
-              --no-paginate --output text)"
-              echo OldWorkflowID: "${OldWorkflowID}"
-              
-              echo CIRCLE_WORKFLOW_ID: "${CIRCLE_WORKFLOW_ID:0:7}"
-              export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
-              --stack-status-filter CREATE_COMPLETE --no-paginate --output text))
+              export STACKS=($(aws cloudformation list-stacks \ 
+                --query "StackSummaries[*].StackName" \
+                --stack-status-filter CREATE_COMPLETE --no-paginate --output text))
               echo Stack names: "${STACKS[@]}"
-        - run:
-            name: Remove old stacks and files
-            command: |
+              export OldWorkflowID=$(curl --insecure https://kvdb.io/${KVDB_BUCKET}/Old_Workflow_ID)
+              echo "The old Workflow_ID: $OldWorkflowID"
               if [[ "${OldWorkflowID}" =~ "${STACKS[@]}"  ]]
               then
                 aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
@@ -494,18 +488,4 @@ workflows:
           requires: [smoke-test]
       - cleanup:
           requires: [cloudfront-update]
-      - notify_on_success:
-          requires: 
-            - build-frontend
-            - build-backend
-            - test-frontend
-            - test-backend
-            - scan-backend
-            - scan-frontend
-            - deploy-infrastructure
-            - run-migrations
-            - deploy-frontend
-            - deploy-backend
-            - smoke-test
-            - cloudfront-update
-            - cleanup
+     
