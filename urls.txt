@@ -2,8 +2,15 @@
 https://github.com/Mohamed24Awwad/UdaPeople_CICD_Project [URL01]
 
 (Public S3 Bucket URL)
-https://udapeople-8f940da.s3.us-west-2.amazonaws.com/index.html [URL02]
+
+https://udapeople-d481394.s3.us-west-2.amazonaws.com/index.html  [URL02]
+
+(CloudFront Distribution URL) 
+d3sry4zu36tnpx.cloudfront.net          [URL03]
+
+(EC2-Server-API-Status URL)
+http://52.12.254.216:3030/api/status   [URL04]
 
 (Prometheus Server URL)
-http://34.217.53.226:9090/targets [URL05]   
+http://34.217.53.226:9090/targets      [URL05]   
 
