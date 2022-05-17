@@ -482,14 +482,14 @@ workflows:
       #     requires: [run-migrations]
       # - deploy-backend:
       #     requires: [run-migrations]
-      - smoke-test
+      # - smoke-test
           # requires: [deploy-backend, deploy-frontend]
-      - cloudfront-update:
-          requires: [smoke-test]
-      - cleanup:
-          requires: [cloudfront-update]
-      - notify_on_success:
-          requires: 
+      # - cloudfront-update:
+      #     requires: [smoke-test]
+      # - cleanup:
+      #     requires: [cloudfront-update]
+      # - notify_on_success:
+      #     requires: 
             # - build-frontend
             # - build-backend
             # - test-frontend
@@ -500,6 +500,6 @@ workflows:
             # - run-migrations
             # - deploy-frontend
             # - deploy-backend
-            - smoke-test
-            - cloudfront-update
-            - cleanup
+            # - smoke-test
+            # - cloudfront-update
+            # - cleanup
