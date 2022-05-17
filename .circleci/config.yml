@@ -466,13 +466,13 @@ workflows:
   udapeople_workflow:
     jobs:
       # - build-frontend
-      - build-backend
+      # - build-backend
       # - test-frontend:
       #     requires: [build-frontend]
       # - test-backend:
       #     requires: [build-backend]
-      - scan-backend:
-          requires: [build-backend]
+      # - scan-backend:
+      #     requires: [build-backend]
       # - scan-frontend:
       #     requires: [build-frontend]
       # - deploy-infrastructure:
@@ -485,16 +485,16 @@ workflows:
       #     requires: [run-migrations]
       # - deploy-backend:
       #     requires: [run-migrations]
-      # - smoke-test:
+      - smoke-test
       #     requires: [deploy-backend, deploy-frontend]
-      # - cloudfront-update:
-      #     requires: [smoke-test]
-      # - cleanup:
-          # requires: [cloudfront-update]
+      - cloudfront-update:
+          requires: [smoke-test]
+      - cleanup:
+          requires: [cloudfront-update]
 
      # ----------------- Slack Notification job on success status ----------------- #
-      # - notify_on_success:
-      #     requires: 
+      - notify_on_success:
+          requires: 
       #       - build-frontend
       #       - build-backend
       #       - test-frontend
@@ -505,7 +505,7 @@ workflows:
       #       - run-migrations
       #       - deploy-frontend
       #       - deploy-backend
-      #       - smoke-test
-      #       - cloudfront-update
-      #       - cleanup
+              - smoke-test
+              - cloudfront-update
+              - cleanup
      
