@@ -471,41 +471,41 @@ workflows:
           requires: [build-frontend]
       - test-backend:
           requires: [build-backend]
-      - scan-backend:
-          requires: [build-backend]
-      - scan-frontend:
-          requires: [build-frontend]
-      - deploy-infrastructure:
-           requires: [test-frontend, test-backend, scan-frontend, scan-backend]
-      - configure-infrastructure:
-          requires: [deploy-infrastructure]
-      - run-migrations:
-          requires: [configure-infrastructure]
-      - deploy-frontend:
-          requires: [run-migrations]
-      - deploy-backend:
-          requires: [run-migrations]
-      - smoke-test:
-          requires: [deploy-backend, deploy-frontend]
-      - cloudfront-update:
-          requires: [smoke-test]
-      - cleanup:
-          requires: [cloudfront-update]
+      # - scan-backend:
+      #     requires: [build-backend]
+      # - scan-frontend:
+      #     requires: [build-frontend]
+      # - deploy-infrastructure:
+      #      requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+      # - configure-infrastructure:
+      #     requires: [deploy-infrastructure]
+      # - run-migrations:
+      #     requires: [configure-infrastructure]
+      # - deploy-frontend:
+      #     requires: [run-migrations]
+      # - deploy-backend:
+      #     requires: [run-migrations]
+      # - smoke-test:
+      #     requires: [deploy-backend, deploy-frontend]
+      # - cloudfront-update:
+      #     requires: [smoke-test]
+      # - cleanup:
+          # requires: [cloudfront-update]
 
      # ----------------- Slack Notification job on success status ----------------- #
-      - notify_on_success:
-          requires: 
-            - build-frontend
-            - build-backend
-            - test-frontend
-            - test-backend
-            - scan-backend
-            - scan-frontend
-            - deploy-infrastructure
-            - run-migrations
-            - deploy-frontend
-            - deploy-backend
-            - smoke-test
-            - cloudfront-update
-            - cleanup
+      # - notify_on_success:
+      #     requires: 
+      #       - build-frontend
+      #       - build-backend
+      #       - test-frontend
+      #       - test-backend
+      #       - scan-backend
+      #       - scan-frontend
+      #       - deploy-infrastructure
+      #       - run-migrations
+      #       - deploy-frontend
+      #       - deploy-backend
+      #       - smoke-test
+      #       - cloudfront-update
+      #       - cleanup
      
